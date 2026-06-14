@@ -4,6 +4,7 @@
 (import
    (scheme core)
    (lib gl)
+   (lib gl 3 context 3.1)
    (OpenGL 3.1))
 
 (export

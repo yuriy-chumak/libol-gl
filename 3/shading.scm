@@ -1,7 +1,7 @@
-(define-library (lib gl shading)
+(define-library (lib gl 3 shading)
 (import
    (scheme base)
-   (OpenGL 2.0))
+   (OpenGL 3.1))
 
 (export
    gl:compile-shader
