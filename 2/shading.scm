@@ -1,4 +1,4 @@
-(define-library (lib gl shading)
+(define-library (lib gl 2 shading)
 (import
    (scheme base)
    (OpenGL 2.0))
@@ -8,7 +8,6 @@
    gl:link-shaders
    gl:create-program
    gl:vertex-preprocessor
-   gl:geometry-preprocessor
    gl:fragment-preprocessor
 )
 
@@ -20,7 +19,6 @@
    (define (preprocessor source)
       (if (pair? source) source (list source)))
    (define vertex-preprocessor preprocessor)
-   (define geometry-preprocessor preprocessor)
    (define fragment-preprocessor preprocessor)
 )
 
@@ -92,7 +90,6 @@
    (define gl:compile-shader compile)
    (define gl:link-shaders link)
    (define gl:vertex-preprocessor vertex-preprocessor)
-   (define gl:geometry-preprocessor geometry-preprocessor)
    (define gl:fragment-preprocessor fragment-preprocessor)
 
 ))

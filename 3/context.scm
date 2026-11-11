@@ -4,8 +4,7 @@
    (owl math) (otus async)
    (lib gl)
    (lib gl config)
-   (otus ffi)
-   (only (scheme process-context) set-environment-variable!))
+   (otus ffi))
 
 (export
    gl:set-context-version ; recreate OpenGL with version
@@ -23,7 +22,7 @@
       (import (OpenGL GLX ARB create_context))
       (import (owl io))
       (begin
-         (define (gl:set-context-version major minor)
+         (define (gl:set-context-version major minor) ; TODO: change this!
             (let*((context (await (mail 'opengl ['get 'context]))) ;#(display screen window cx)
                   (display screen window cx context)
                   ; this functions requires GLX 1.3+, TODO: handle case without glXChooseFBConfig
@@ -59,12 +58,14 @@
                      GLX_CONTEXT_MINOR_VERSION  minor)
                   ; поддерживать ли fixed-function функции
                   (if (config 'core-profile #f)
-                     (list #x9126 1) ;GLX_CONTEXT_PROFILE_MASK_ARB GLX_CONTEXT_CORE_PROFILE_BIT_ARB
-                     (list #x9126 2));GLX_CONTEXT_PROFILE_MASK_ARB GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB
+                     (list #x9126 1) ; GLX_CONTEXT_PROFILE_MASK_ARB GLX_CONTEXT_CORE_PROFILE_BIT_ARB
+                     (list #x9126 2) ; GLX_CONTEXT_PROFILE_MASK_ARB GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB
+                  )
                   ; NVidia cards
                   (if (config 'exact-context #f)
-                     (list #x2094 2) ;GLX_CONTEXT_FLAGS_ARB GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB
-                     (list))
+                     (list #x2094 2) ; GLX_CONTEXT_FLAGS_ARB GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB
+                     (list)
+                  )
                   ; end of options
                   (list 0)
                ))

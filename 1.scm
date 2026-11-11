@@ -1,4 +1,4 @@
-(define-library (lib gl 1.0)
+(define-library (lib gl 1)
 (import
    (scheme core)
    (lib gl)
@@ -7,5 +7,4 @@
 (export
    (exports (lib gl))
    (exports (OpenGL 1.0)))
-
 (begin ))

@@ -2,12 +2,11 @@
 (import
    (scheme core)
    (lib gl)
-   (lib gl shading)
+   (lib gl 2. shading)
    (OpenGL 2.0))
 
 (export
    (exports (lib gl))
-   (exports (lib gl shading))
-   (exports (OpenGL 2.0)))
-
+   (exports (OpenGL 2.0))
+   (exports (lib gl 2. shading)))
 (begin ))
