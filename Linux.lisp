@@ -281,27 +281,21 @@
       (XResizeWindow display window width height)))
 
 ; ---
-(setq XDefineCursor (X11 fft-void "XDefineCursor" type-vptr type-vptr type-vptr))
-(setq XDefaultColormap (X11 fft-int "XDefaultColormap" type-vptr fft-int))
-(setq XAllocNamedColor (X11 fft-void "XAllocNamedColor" type-vptr fft-int type-string type-vptr type-vptr))
-(setq XCreateBitmapFromData (X11 type-vptr "XCreateBitmapFromData" type-vptr type-vptr type-vptr fft-unsigned-int fft-unsigned-int))
+(setq XCreatePixmap (X11 type-vptr "XCreatePixmap" type-vptr type-vptr fft-unsigned-int fft-unsigned-int fft-unsigned-int))
 (setq XCreatePixmapCursor (X11 type-vptr "XCreatePixmapCursor" type-vptr type-vptr type-vptr type-vptr type-vptr fft-unsigned-int fft-unsigned-int))
+(setq XDefineCursor (X11 fft-void "XDefineCursor" type-vptr type-vptr type-vptr))
 (setq XFreeCursor (X11 type-vptr "XFreeCursor" type-vptr type-vptr))
 (setq XFreePixmap (X11 type-vptr "XFreePixmap" type-vptr type-vptr))
 
 (define (os:HideCursor context)
    (vector-apply context (lambda (dpy screen window cx)
-      (let*((bm_no_data '(0 0 0 0 0 0 0 0))
-            (cmap (XDefaultColormap dpy screen))
-            ; sizeof XColor is 12 for x64 and 9 for x86
-            (black (make-bytevector 12))
-            (dummy (make-bytevector 12))
-            ;(? (XAllocNamedColor dpy cmap "black" black dummy))
-            (bm_no (XCreateBitmapFromData dpy window black 8 8))
-            (cursor (XCreatePixmapCursor dpy bm_no bm_no black black 0 0)))
+      (let*((bm_no_data (make-bytevector 8))
+            (pixmap (XCreatePixmap dpy window 1 1 1))
+            (color (make-bytevector 16))
+            (cursor (XCreatePixmapCursor dpy pixmap pixmap color color 0 0)))
          (XDefineCursor dpy window cursor)
          (XFreeCursor dpy cursor)
-         (XFreePixmap dpy bm_no)))))
+         (XFreePixmap dpy pixmap)))))
 
 ; ---
 (setq XGetInputFocus (X11 fft-void "XGetInputFocus" type-vptr (fft* type-vptr) (fft& fft-int)))
