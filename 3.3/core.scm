@@ -5,12 +5,12 @@
    (lib gl context 3.3)
 
    (lib gl)
-   (lib gl 3. shading)
+   (lib gl 3.2 shading)
    (OpenGL 3.3))
 
 (export
    (exports (lib gl))
-   (exports (lib gl 3. shading))
+   (exports (lib gl 3.2 shading))
    (exports (OpenGL 3.3)))
 
 (begin ))

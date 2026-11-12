@@ -5,13 +5,13 @@
    (lib gl context 3.2)
 
    (lib gl)
-   (lib gl 3. shading)
+   (lib gl 3.2 shading)
    (OpenGL ARB compatibility)
    (OpenGL 3.2))
 
 (export
    (exports (lib gl))
-   (exports (lib gl 3. shading))
+   (exports (lib gl 3.2 shading))
    (exports (OpenGL ARB compatibility))
    (exports (OpenGL 3.2)))
 
