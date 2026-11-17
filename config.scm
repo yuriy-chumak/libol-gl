@@ -17,6 +17,8 @@
          'blue 8   ; 8 bits for blue color
          'depth 24 ;24 bits for depth buffer
 
+         'width 854
+         'height 480
       }))
       (let*((envelope (wait-mail))
             (sender msg envelope))
