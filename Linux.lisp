@@ -79,9 +79,9 @@
          ;; (create-basic-vi (lambda ()
 
 
-         (fbc0 (when context-version
+         (fbc0 (begin
                   (define glXGetProcAddress (GLX type-vptr "glXGetProcAddress" type-string))
-                  ;; GLX 1.3 required
+                  ;; GLX 1.3 required (handle case GLX < 1.3)
                   (define glXChooseFBConfig (GLX fft-void* "glXChooseFBConfig" fft-void* fft-int fft-int* fft-int&)) ; GLX 1.3
                   ; TODO: if no glXChooseFBConfig create legacy context before, then try again
 
@@ -152,15 +152,18 @@
                   (XStoreName dpy window title)
                   (XMapWindow dpy window)
 
-                  (if context-version
+                  (if fbc0
                   then
                      ;; GLX_ARB_create_context
                      (define glXCreateContextAttribsARB (gl:GetProcAddress type-vptr "glXCreateContextAttribsARB" fft-void* fft-void* fft-void* fft-int fft-int*))
 
                      (define contextAttribs (append
-                        (list
-                           #x2091  (car context-version) ; GLX_CONTEXT_MAJOR_VERSION
-                           #x2092  (cdr context-version) ; GLX_CONTEXT_MINOR_VERSION
+                        (if context-version
+                           (list
+                              #x2091  (car context-version) ; GLX_CONTEXT_MAJOR_VERSION
+                              #x2092  (cdr context-version) ; GLX_CONTEXT_MINOR_VERSION
+                           )
+                           (list )
                         )
                         ; поддерживать ли fixed-function функции
                         (if (config 'core-profile #f)
@@ -189,8 +192,7 @@
       (print-to stderr "OpenGL renderer: " (glGetString GL_RENDERER))
 
       ; TODO: collect extensions map (for the quick access)
-
-      [dpy screen window context]
+      [dpy screen window context fbc0]
 ))
 
 
