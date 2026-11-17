@@ -17,12 +17,13 @@
 ; NVidia cards will use GLX_CONTEXT_FLAGS_ARB GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB
 
 (setq X11 (load-dynamic-library "libX11.so.6"))
+(setq void* fft-void*)
 
 ; context manipulations
 (setq XOpenDisplay   (X11 fft-void* "XOpenDisplay" type-string))
 (setq XDefaultScreen (X11 fft-int "XDefaultScreen" fft-void*))
 (setq XRootWindow    (X11 fft-void* "XRootWindow" fft-void* fft-int))
-(setq XCreateWindow (X11 fft-void* "XCreateWindow"
+(setq XCreateWindow  (X11 fft-void* "XCreateWindow"
    fft-void* ; display
    fft-void* ; parent Window
    fft-int fft-int fft-unsigned-int fft-unsigned-int ; x y width height
@@ -49,6 +50,7 @@
             fft-unsigned-long ; Cursor
       ))
    ))
+(setq XCreatePixmap  (X11 type-vptr "XCreatePixmap" type-vptr type-vptr fft-unsigned-int fft-unsigned-int fft-unsigned-int))
 
 
 (setq XSelectInput   (X11 fft-void "XSelectInput" fft-void* fft-void* fft-long))
@@ -103,7 +105,8 @@
                   (define fbc0 (bytevector->void* (vptr->bytevector fbc* (sizeof type-vptr)) 0)) ; fbc0 = fbc*[0]
                   (XFree fbc*)
                   fbc0))
-         (vi depth (if fbc0
+         (vi depth
+               (if fbc0
                then
                   ;; GLX 1.3 required
                   (define glXGetVisualFromFBConfig (GLX fft-void* "glXGetVisualFromFBConfig" fft-void* fft-void*))
@@ -133,7 +136,8 @@
                   (define depth (+ (config 'red 8) (config 'green 8) (config 'blue 8))) ; TODO: переделать
 
                   (values vi depth) ))
-         (window context (begin
+         (window
+               (begin
                   (define cmap (XCreateColormap dpy
                      (XRootWindow dpy screen)
                      vi 0))
@@ -146,12 +150,80 @@
                      vi
                      #x2000 ; CWColormap
                      (list 0 0 0 0 0 0 0 0 0 0 0 0 0 cmap 0)))
-
                   (XSelectInput dpy window #b100000000000000111) ; StructureNotifyMask | KeyPressMask | KeyReleaseMask | ButtonPressMask
-                  ; ok, show it
+                  
+                  ; show splash text if OpenGL 3.1+ or 4.0+
+                  (when (or
+                           (config 'context-version #f)
+                           (config 'background #f)
+                           (config 'splash-text #f))
+                     ; X11 functions
+                     (define XCreateGC (X11 fft-void* "XCreateGC" fft-void* fft-void* fft-unsigned-long fft-void*))
+                     (define XSetForeground (X11 fft-void* "XSetForeground" fft-void* fft-void* fft-unsigned-long))
+                     (define XFreeGC (X11 fft-void "XFreeGC" fft-void* fft-void*))
+                     (define XFillRectangle (X11 fft-void "XFillRectangle" fft-void* fft-void* fft-void* fft-int fft-int fft-unsigned-int fft-unsigned-int))
+                     (define XFlush (X11 fft-void "XFlush" fft-void*))
+                     (define XSetWindowBackgroundPixmap (X11 fft-int "XSetWindowBackgroundPixmap" fft-void* fft-void* fft-void*))
+                     (define XClearWindow (X11 fft-int "XClearWindow" fft-void* fft-void*))
+
+                     ; well, let's clear
+                     (define pixmap (XCreatePixmap dpy window (config 'width WIDTH) (config 'height HEIGHT) depth))
+                     (define gc (XCreateGC dpy pixmap 0 #f))
+
+                     (XSetForeground dpy gc 0)
+                     (XFillRectangle dpy pixmap gc 0 0 (config 'width WIDTH) (config 'height HEIGHT))
+                     (XSetWindowBackgroundPixmap dpy window pixmap)
+
+                     ; show the text in lower right corner
+                     (define XFT (load-dynamic-library "libXft.so"))
+                     (define XftFontOpenName (XFT fft-void* "XftFontOpenName" fft-void* fft-int type-string))
+                     (define XftDrawCreate (XFT fft-void* "XftDrawCreate" fft-void* fft-void* fft-void* fft-void*))
+                     (define XftColorAllocName (XFT fft-bool "XftColorAllocName" fft-void* fft-void* fft-void* type-string type-bytevector))
+                     (define XftDrawStringUtf8 (XFT fft-void "XftDrawStringUtf8" fft-void* fft-void* fft-void* fft-int fft-int type-bytevector fft-int))
+                     (define XftTextExtentsUtf8 (XFT fft-void "XftTextExtentsUtf8" fft-void* fft-void* type-bytevector fft-int type-bytevector))
+                     
+                     (define (splash-text /text /font /color)
+
+                        (define text (string->utf8 /text))
+                        (define font (XftFontOpenName dpy screen (or /font "DejaVu Sans")))
+                        (define draw (XftDrawCreate dpy pixmap vi cmap))
+                        (define color (make-bytevector 16))
+                        (XftColorAllocName dpy vi cmap (or /color "gray") color) ; todo: get color from config
+
+                        (define extents (make-bytevector 24))
+                        (XftTextExtentsUtf8 dpy font text (size text) extents)
+
+                        (XFillRectangle dpy pixmap gc 0 0 (config 'width WIDTH) (config 'height HEIGHT))
+                        (XftDrawStringUtf8 draw color font
+                           (- (config 'width WIDTH) (bytevector->uint16 extents 0) 40) ; todo: use config
+                           (- (config 'height HEIGHT) (bytevector->uint16 extents 2) 20) ; todo: use config
+                           text (size text))
+                           
+                        ; redraw window
+                        (XSetWindowBackgroundPixmap dpy window pixmap)
+                        (XClearWindow dpy window)
+                        (XFlush dpy))
+                     
+                     (splash-text (config 'splash-text "Loading OpenGL libraries...") #f #f)
+                     (mail 'opengl ['set 'splash-text splash-text])
+
+                     ; setup splash screen remover
+                     (mail 'opengl ['set 'splashcreen-remover (lambda ()
+                           (XSetWindowBackgroundPixmap dpy window #f)
+                           (XFreeGC dpy gc)
+                        )])
+                     ;; XftDrawDestroy(draw);
+                     ;; XftFontClose(dpy, font);
+                     )
+
+                  ; finally, show window
                   (XStoreName dpy window title)
                   (XMapWindow dpy window)
 
+                  window))
+
+         (context
+               (begin
                   (if fbc0
                   then
                      ;; GLX_ARB_create_context
@@ -179,12 +251,9 @@
                         (list None)
                      ))
 
-                     (define context (glXCreateContextAttribsARB dpy fbc0 #f 1 contextAttribs))
-                     (values window context)
-
+                     (glXCreateContextAttribsARB dpy fbc0 #f 1 contextAttribs)
                   else
-                     (define context (glXCreateContext dpy vi #false 1))
-                     (values window context)) )))
+                     (glXCreateContext dpy vi #false 1)) )))
 
       (glXMakeCurrent dpy window context)
       (print-to stderr "OpenGL version: " (glGetString GL_VERSION))
@@ -194,7 +263,6 @@
       ; TODO: collect extensions map (for the quick access)
       [dpy screen window context fbc0]
 ))
-
 
 (define (native:enable-context context)
    (vector-apply context (lambda (dpy screen window cx)
