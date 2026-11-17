@@ -175,7 +175,6 @@
                         ; end of options
                         (list None)
                      ))
-                     (print "contextAttribs: " contextAttribs)
 
                      (define context (glXCreateContextAttribsARB dpy fbc0 #f 1 contextAttribs))
                      (values window context)

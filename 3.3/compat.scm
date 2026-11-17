@@ -1,4 +1,4 @@
-(define-library (lib gl 3.3 core)
+(define-library (lib gl 3.3 compat)
 (import
    (scheme core)
    (lib gl context compat)
